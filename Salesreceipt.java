@@ -1,58 +1,103 @@
-package salesreceipt;
 import java.util.Scanner;
-import java.text.DecimalFormat;  
+import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 public class Salesreceipt {
-    static double tax;
     private static Scanner input;
 
     public static void main(String[] args) {
         input = new Scanner(System.in);
-        System.out.println("Input first item's name");
-        String item1 = input.nextLine();
-        System.out.println("Number of "+item1);
-        int numberitem1 = input.nextInt();
-        System.out.println("Price of "+item1);
-        double priceitem1 = input.nextDouble();
-        
-        input = new Scanner(System.in);
-        System.out.println("Input second item's name");
-        String item2 = input.nextLine();
-        System.out.println("Number of "+item2);
-        int numberitem2 = input.nextInt();
-        System.out.println("Price of "+item2);
-        double priceitem2 = input.nextDouble();
-        String CA="CA\n";
-        input = new Scanner(System.in);
-        System.out.println("Location?(CA=1/NY=2)");
-        int location = input.nextInt();
-        System.out.println("------");
-      
+        System.out.println("Input:");
+        String userInput = input.nextLine();
+        System.out.printf("%-15s %-15s %-15s", "item", "price", "qty");
+        System.out.println();
+        String location = userInput.substring(userInput.indexOf("Location:") + 10);
+        double taxRate = 0;
+        location = location.substring(0, location.indexOf(","));
+        if (location.equals("CA")) {
+            taxRate = 0.0975;
+        } else if (location.equals("NY")) {
+            taxRate = 0.08875;
+        }
+        double tax = 0;
+        var food = new ArrayList<String>();
+        food.add("potato chips");
+        food.add("apple");
+        food.add("orange");
+        var clothing = new ArrayList<String>();
+        clothing.add("shirt");
+        clothing.add("shirts");
+        clothing.add("top");
+        clothing.add("tops");
+        clothing.add("dress");
+        clothing.add("dresses");
 
-       double item1Total = priceitem1 * numberitem1;
-       double item2Total = priceitem2 * numberitem2;
-       double subTotal = item1Total  + item2Total;
-       if(location==1)
-       {
-       tax = subTotal * 0.0975;
-       }
-       if(location==2)
-       {
-       tax = subTotal * 0.08875;
-       }
-       tax = Math.round(tax * 20.0) / 20.0;
-       double total= subTotal+tax;  
-       DecimalFormat    df   = new DecimalFormat("#.00"); 
-       System.out.println("item\t\t\tprice\t\t\tqty");
-       System.out.println(item1+"\t\t\t"+df.format(priceitem1)+"\t\t\t"+numberitem1);
-       System.out.println(item2+"\t\t\t"+df.format(priceitem2)+"\t\t\t"+numberitem2);
+        char cut = ',';
+        int count = 0;
 
-       
+        for (int i = 0; i < userInput.length(); i++) {
+            if (userInput.charAt(i) == cut) {
+                count++;
+            }
+        }
+        String[] sen = new String[count + 1];
+        String[] beforeAt = new String[count];
+        String[] afterAt = new String[count];
+        double[] price = new double[count];
+        String[] numItemS = new String[count];
+        int[] numItem = new int[count];
+        String[] item = new String[count];
+        sen[0] = userInput;
+        double subTotal = 0;
+        DecimalFormat df = new DecimalFormat("#.00");
+        boolean exempt[] = new boolean[count];
 
-       System.out.println("subtotal:\t\t\t\t" + df.format(subTotal));
-       System.out.println("tax:\t\t\t\t\t" + df.format(tax));
-       System.out.println("total\t\t\t\t\t" + df.format(total));
-       
-       
+        for (int i = 0; i < count; i++) {
+            sen[i] = sen[i].substring(sen[i].indexOf(", ") + 2);
+            sen[i + 1] = sen[i];
+            beforeAt[i] = sen[i].substring(0, sen[i].indexOf(" at "));
+            numItemS[i] = beforeAt[i].substring(0, beforeAt[i].indexOf(" "));
+            numItem[i] = Integer.parseInt(numItemS[i]);
+            item[i] = beforeAt[i].substring(beforeAt[i].indexOf(" ") + 1);
+            afterAt[i] = sen[i].substring(sen[i].indexOf("at ") + 3);
+            
+            if (i + 1 < count) {
+                afterAt[i] = afterAt[i].substring(0, afterAt[i].indexOf(","));
+            }
+            price[i] = Double.parseDouble(afterAt[i]);
+            exempt[i] = false;
+            
+            if (location.equals("CA") || location.equals("NY")) {
+                for (int j = 0; j < food.size(); j++) {
+                    if (item[i].equals(food.get(j))) {
+                        exempt[i] = true;
+                    }
+                }
+            }
+            
+            if (location.equals("NY")) {
+                for (int j = 0; j < clothing.size(); j++) {
+                    if (item[i].equals(clothing.get(j))) {
+                        exempt[i] = true;
+                    }
+                }
+            }
+            
+            subTotal = numItem[i] * price[i] + subTotal;
+            
+            if (!exempt[i]) {
+                tax = tax + (numItem[i] * price[i] * taxRate);
+                tax = Math.round(tax * 10.0) / 10.0;
+            }
+            System.out.printf("%-15s %-15s %-15s", item[i], df.format(price[i]), numItem[i]);
+            System.out.println();
+        }
+        double total = subTotal + tax;
+        System.out.printf("%-30s %-15s", "subtotal:", df.format(subTotal));
+        System.out.println();
+        System.out.printf("%-30s %-15s", "tax:", df.format(tax));
+        System.out.println();
+        System.out.printf("%-30s %-15s", "total:", df.format(total));
+        System.out.println();
     }
 }
